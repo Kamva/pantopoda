@@ -20,8 +20,8 @@ func Validate(r RequestData) ValidationError {
 		} else {
 			errorBag := shark.NewErrorBag()
 
+			t := r.(nautilus.Taggable)
 			for _, err := range err.(validator.ValidationErrors) {
-				t := r.(nautilus.Taggable)
 				errorBag.Append(
 					nautilus.ToSnake(err.StructField()),
 					orca.GetTranslationKey(t, err.StructField(), err.Tag()),
