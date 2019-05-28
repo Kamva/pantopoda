@@ -2,7 +2,6 @@ package pantopoda
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 )
@@ -19,10 +18,7 @@ func NewPantopoda() *Pantopoda {
 
 // Request sends a `method` request to the `endpoint` with given request data.
 func (c *Pantopoda) Request(method string, endpoint string, request Request) (Response, error) {
-	b, err := json.Marshal(request.Payload)
-	if err != nil {
-		return nil, err
-	}
+	b := request.Payload.ToJSON()
 
 	if !request.Query.Empty() {
 		endpoint = endpoint + "?" + request.Query.ToString()
