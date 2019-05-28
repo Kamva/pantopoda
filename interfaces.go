@@ -45,8 +45,32 @@ type ValidationError struct {
 // RequestHeaders represents the key-value pairs in an HTTP header.
 type RequestHeaders map[string]string
 
-// RequestBody represent the json body in an HTTP request body.
-type RequestBody map[string]interface{}
+// RequestBody represents the json body in an HTTP request body.
+type RequestBody interface {
+	ToJSON() []byte
+}
+
+// JSONBody represents the json object body.
+type JSONBody map[string]interface{}
+
+// ToJSON converts the JSONBody to json bytes
+func (body JSONBody) ToJSON() []byte {
+	b, err := json.Marshal(body)
+	shark.PanicIfError(err)
+
+	return b
+}
+
+// JSONArray represents the body with an array of json objects.
+type JSONArray []JSONBody
+
+// ToJSON converts the JSONArray to json bytes
+func (body JSONArray) ToJSON() []byte {
+	b, err := json.Marshal(body)
+	shark.PanicIfError(err)
+
+	return b
+}
 
 // QueryParams represent url query params.
 type QueryParams map[string][]string
@@ -68,6 +92,7 @@ func (q QueryParams) ToString() string {
 	return strings.Join(outSlice, "&")
 }
 
+// Empty checks if query param is empty.
 func (q QueryParams) Empty() bool {
 	return len(q) == 0
 }
