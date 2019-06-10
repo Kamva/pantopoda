@@ -3,9 +3,11 @@ package pantopoda
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/Kamva/nautilus"
+	code "github.com/Kamva/pantopoda/http"
 	"github.com/Kamva/shark"
 )
 
@@ -110,16 +112,33 @@ type Request struct {
 	Headers RequestHeaders
 }
 
+// HasBody checks that request has payload
+func (r *Request) HasBody() bool {
+	return r.Payload != nil
+}
+
 // Response represents HTTP call response body.
-type Response []byte
+type Response struct {
+	json       []byte
+	StatusCode code.StatusCode
+	Headers    http.Header
+}
 
 // Unmarshal parses the JSON-encoded response and stores the result in the value
 // pointed to by v.
 func (r Response) Unmarshal(v interface{}) error {
-	return json.Unmarshal(r, v)
+	return json.Unmarshal(r.json, v)
 }
 
 // ToString convert the response body to its string value.
 func (r Response) ToString() string {
-	return string(r)
+	return string(r.json)
+}
+
+func newResponse(res *http.Response, body []byte) Response {
+	return Response{
+		json:       body,
+		StatusCode: code.StatusCode(res.StatusCode),
+		Headers:    res.Header,
+	}
 }

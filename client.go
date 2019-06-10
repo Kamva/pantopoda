@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // Pantopoda is a HTTP client that makes it easy to send HTTP requests and
@@ -18,14 +20,19 @@ func NewPantopoda() *Pantopoda {
 
 // Request sends a `method` request to the `endpoint` with given request data.
 func (c *Pantopoda) Request(method string, endpoint string, request Request) (Response, error) {
-	b := request.Payload.ToJSON()
+	var b []byte
+	if request.HasBody() {
+		b = request.Payload.ToJSON()
+	} else {
+		b = []byte("{}")
+	}
 
 	if !request.Query.Empty() {
 		endpoint = endpoint + "?" + request.Query.ToString()
 	}
 	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(b))
 	if err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
 	for key, value := range request.Headers {
@@ -35,17 +42,22 @@ func (c *Pantopoda) Request(method string, endpoint string, request Request) (Re
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return Response{}, err
+	}
+
+	var statusErr error
+	if resp.StatusCode >= 300 {
+		statusErr = errors.New(resp.Status)
 	}
 
 	defer resp.Body.Close()
 
 	resBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
-	return Response(resBody), nil
+	return newResponse(resp, resBody), statusErr
 }
 
 // Get sends a GET request to `endpoint` with given data.
