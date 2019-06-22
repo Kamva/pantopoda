@@ -61,15 +61,15 @@ func (c *Pantopoda) Request(method string, endpoint string, request Request) (Re
 		return Response{}, err
 	}
 
-	var statusErr *ResponseError
 	if resp.StatusCode >= 300 {
-		statusErr = &ResponseError{
+		statusErr := ResponseError{
 			Status:  resp.Status,
 			Payload: resBody,
 		}
+		return newResponse(resp, resBody), statusErr
 	}
 
-	return newResponse(resp, resBody), statusErr
+	return newResponse(resp, resBody), nil
 }
 
 // Get sends a GET request to `endpoint` with given data.
