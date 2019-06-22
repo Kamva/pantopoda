@@ -2,11 +2,20 @@ package pantopoda
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
+
+// ResponseError is an error implementation for client and server errors in API calls.
+type ResponseError struct {
+	Status  string
+	Payload []byte
+}
+
+func (e ResponseError) Error() string {
+	return fmt.Sprintf("%s: %s", e.Status, e.Payload)
+}
 
 // Pantopoda is a HTTP client that makes it easy to send HTTP requests and
 // trivial to integrate with web services.
@@ -45,16 +54,19 @@ func (c *Pantopoda) Request(method string, endpoint string, request Request) (Re
 		return Response{}, err
 	}
 
-	var statusErr error
-	if resp.StatusCode >= 300 {
-		statusErr = errors.New(resp.Status)
-	}
-
 	defer resp.Body.Close()
 
 	resBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Response{}, err
+	}
+
+	var statusErr *ResponseError
+	if resp.StatusCode >= 300 {
+		statusErr = &ResponseError{
+			Status:  resp.Status,
+			Payload: resBody,
+		}
 	}
 
 	return newResponse(resp, resBody), statusErr
