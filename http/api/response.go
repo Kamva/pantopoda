@@ -3,8 +3,8 @@ package api
 import (
 	"github.com/Kamva/nautilus"
 	"github.com/Kamva/pantopoda/http"
-	"github.com/fatih/structs"
 	"github.com/kataras/iris"
+	"github.com/mitchellh/mapstructure"
 )
 
 // A map used for Response json representation
@@ -12,13 +12,22 @@ type responseJSON map[string]interface{}
 
 // Payload is placeholder for API Response body
 type Payload struct {
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Message string      `json:"message" mapstructure:"message"`
+	Data    interface{} `json:"data" mapstructure:"data"`
 }
 
 // Map convert payload data to map
 func (p Payload) Map() map[string]interface{} {
-	return structs.Map(p)
+	output := make(map[string]interface{})
+	err := mapstructure.Decode(p, &output)
+
+	if err != nil {
+		output = map[string]interface{}{
+			"error": "error in parsing response payload.",
+		}
+	}
+
+	return output
 }
 
 // ResponseHeader is map of API Response headers
