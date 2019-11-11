@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/Kamva/nautilus"
 	"github.com/Kamva/pantopoda/http"
-	"github.com/kataras/iris"
+	"github.com/kataras/iris/v12"
 	"github.com/mitchellh/mapstructure"
 )
 
